@@ -5,8 +5,11 @@ export ROOT=/etc/opensprinkler
 
 function get_required(){
     apt update -y
-    rpi-update
+    apt upgrade -y
+
     apt install -y build-essential git
+
+    rpi-update
 }
 
 function setup_user(){
@@ -17,7 +20,7 @@ function setup_user(){
 }
 
 function download_and_compile(){
-    pushd $(echo ${ROOT} | sed 's/ospi//')
+    pushd /etc
 
     git clone https://github.com/stephen-mw/OpenSprinkler-Installer.git opensprinkler
     pushd opensprinkler
@@ -42,11 +45,29 @@ function cleanup(){
     systemctl demon-reload
     systemctl enable opensprinkler
 
-    echo "OpenSprinkler is running on port 8080"
-    echo "You may need to restart your computer."
+    cat <<MESSAGE
+OpenSprinkler is running on port 8080! The default password is "opendoor".
+
+You may need to restart your computer depending on the updates that were installed.
+
+The following commands might be useful to you:
+
+# Check the logs:
+sudo grep 'opensprinkler' /var/log/syslg
+
+# Start, stop, restart the service
+$ systemctl restart opensprinkler
+$ systemctl start opensprinkler
+$ systemctl stop opensprinkler
+
+# To prevent opensprinkler from-autostarting in the future:
+$ systemctl disable opensprinkler
+
+Good luck!
+MESSAGE
 }
 
 get_required
-setup_user
 download_and_compile
+setup_user
 cleanup
