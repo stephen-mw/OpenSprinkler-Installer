@@ -1,0 +1,17 @@
+#!/usr/bin/env python
+
+"Reset all of the sprinkler heads. Done every time the Raspberry Pi restarts"
+
+import time
+
+import RPi.GPIO as GPIO
+
+GPIO.setmode(GPIO.BCM)
+PINS = [5, 6, 13, 19, 26, 16, 20, 21]
+
+try:
+    for pin in PINS:
+        GPIO.setup(pin, GPIO.OUT)
+        GPIO.output(pin, GPIO.HIGH)
+finally:
+    GPIO.cleanup()
