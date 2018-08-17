@@ -1,0 +1,14 @@
+[Unit]
+Description=OpenSprinkler Raspberry Pi
+
+[Service]
+User=ospi
+WorkingDirectory=/usr/local/src/ospi
+ExecStart=/usr/local/src/ospi/OpenSprinkler
+KillMode=process
+Restart=on-failure
+ExecStartPre=/usr/local/sbin/reset_sprinkler_headers
+ExecStopPost=/usr/local/sbin/reset_sprinkler_headers
+
+[Install]
+WantedBy=multi-user.target

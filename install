@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+set -exuo pipefail
+
+export ROOT=/usr/local/src/ospi
+
+function get_required(){
+    apt update -y
+    rpi-update
+    apt install -y build-essential git
+}
+
+function setup_user(){
+    if ! id -u ospi; then
+        useradd -m -G gpio -d ${ROOT} -s /bin/false ospi
+    fi
+}
+
+function download_and_compile(){
+    pushd $(echo ${ROOT} | sed 's/ospi//')
+
+    git clone https://github.com/OpenSprinkler/OpenSprinkler-Firmware.git src
+
+    pushd ${ROOT}/src
+    ./build.sh ospi
+
+    cp OpenSprinkler ../
+    popd
+
+    rm -rfv -- src
+
+    pushd systemd
+    cp ln -s $(pwd)/* /etc/systemd/
+    popd
+}
+
+function cleanup(){
+    chown -R ospi:ospi ${ROOT}
+    systemctl demon-reload
+    systemctl enable opensprinkler
+
+    echo "OpenSprinkler is running on port 8080"
+    echo "You may need to restart your computer."
+}
+
+get_required
+setup_user
+download_and_compile
+cleanup
