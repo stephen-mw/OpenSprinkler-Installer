@@ -9,6 +9,8 @@ function get_required(){
 
     apt install -y build-essential git
 
+    pip install RPi.GPIO
+
     rpi-update
 }
 
@@ -22,9 +24,15 @@ function setup_user(){
 function download_and_compile(){
     pushd /etc
 
+    if [[ -d opensprinkler ]]; then
+	rm -rfv opensprinkler
+    fi
     git clone https://github.com/stephen-mw/OpenSprinkler-Installer.git opensprinkler
     pushd opensprinkler
 
+    if [[ -d src ]]; then
+	rm -rfv -- src
+    fi
     git clone https://github.com/OpenSprinkler/OpenSprinkler-Firmware.git src
 
     pushd ${ROOT}/src
@@ -35,33 +43,49 @@ function download_and_compile(){
 
     rm -rfv -- src
 
-    pushd systemd
-    cp ln -s $(pwd)/* /etc/systemd/
-    popd
+    ln -sf ${ROOT}/opensprinkler.service /etc/systemd/system/opensprinkler.service
+}
+
+function reset_script(){
+    pushd ${ROOT}
+    cat >> /etc/cron.d/reset_sprinkers <<CRON
+@reboot root ${ROOT}/reset_sprinklers
+CRON
 }
 
 function cleanup(){
     chown -R ospi:ospi ${ROOT}
-    systemctl demon-reload
+    systemctl daemon-reload
     systemctl enable opensprinkler
 
     cat <<MESSAGE
+
+#############################################################################
+#
+#                    Installation complete!
+#
+#############################################################################
+
+
 OpenSprinkler is running on port 8080! The default password is "opendoor".
 
 You may need to restart your computer depending on the updates that were installed.
 
 The following commands might be useful to you:
 
-# Check the logs:
-sudo grep 'opensprinkler' /var/log/syslg
+Check the logs:
 
-# Start, stop, restart the service
-$ systemctl restart opensprinkler
-$ systemctl start opensprinkler
-$ systemctl stop opensprinkler
+    sudo grep 'opensprinkler' /var/log/syslg
 
-# To prevent opensprinkler from-autostarting in the future:
-$ systemctl disable opensprinkler
+Start, stop, restart the service
+
+    $ systemctl restart opensprinkler
+    $ systemctl start opensprinkler
+    $ systemctl stop opensprinkler
+
+To prevent opensprinkler from auto-starting in the future:
+
+    $ systemctl disable opensprinkler
 
 Good luck!
 MESSAGE
