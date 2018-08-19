@@ -26,11 +26,13 @@ def init():
         GPIO.output(pin, GPIO.HIGH)
 
 def switch():
+    pos = 0
     while True:
         for pin in PINS:
-            print("Attempting pin %s" % pin)
+            pos += 1
+            print("Attempting relay %s (pin %s)" % (pos, pin))
             GPIO.output(pin, GPIO.LOW)
-            time.sleep(0.5  )
+            time.sleep(1)
             GPIO.output(pin, GPIO.HIGH)
 
 try:
